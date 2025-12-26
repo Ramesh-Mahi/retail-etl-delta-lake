@@ -1,0 +1,13 @@
+# Spark / Delta
+spark-warehouse/
+metastore_db/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Local data (optional)
+data/raw/
