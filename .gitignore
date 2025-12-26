@@ -1,13 +1,19 @@
-# Spark / Delta
-spark-warehouse/
-metastore_db/
-
 # Python
 __pycache__/
 *.pyc
 
+# IDE
+.idea/
+.vscode/
+
+# Spark / Delta
+**/_delta_log/
+**/*.parquet
+spark-warehouse/
+
 # Logs
 *.log
 
-# Local data (optional)
-data/raw/
+# OS
+.DS_Store
+Thumbs.db
