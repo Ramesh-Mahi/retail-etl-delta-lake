@@ -1,28 +1,37 @@
-from pyspark.sql import SparkSession
+from common.spark_session import get_spark
 from pyspark.sql import functions as F
 from config.paths import *
 
-spark = (SparkSession.builder
-         .appName('Retail_ETL')
-         .getOrCreate())
+spark = get_spark('Retail_ETL')
 
 # Building a fact table here in the gold pipeline
 
-silver_orders_df = spark.read.format('delta').load(SILVER_CUSTOMERS_OUTPUT)
+silver_orders_df = spark.read.format('delta').load(SILVER_ORDERS_OUTPUT)
 
-dim_customers_df = (spark.read
-                    .table('dim_customers')
-                    .filter(F.col('is_current') == True))
+dim_customers_df = spark.read.format('delta').load(DIM_CUSTOMERS_TABLE_PATH).select(
+        'customer_sk',
+        'customer_id',
+        'name',
+        'city',
+        'start_date',
+        'end_date'
+    )
 
 fact_orders_df = (
     silver_orders_df.alias('t').join(
         dim_customers_df.alias('s'),
-        F.col('t.customer_id') == F.col('s.customer_id'),
+        (F.col('t.customer_id') == F.col('s.customer_id')) &
+        (F.col('t.order_date') >= F.col('s.start_date')) &
+        (
+            (F.col('t.order_date') < F.col('s.end_date')) |
+            (F.col('s.end_date').isNull())
+        ),
         'left'
     )
     .select(
         F.col('t.order_id'),
-        F.col('t.customer_id'),
+        #handle late arriving / missing dimension -order arrive before customer or customer record is delayed (-1 = unknown customer)
+        F.coalesce(F.col('s.customer_sk'),F.lit(-1)).alias('customer_sk'),
         F.col('t.order_date'),
         F.col('t.amount'),
         F.col('t.status'),

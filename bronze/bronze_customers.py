@@ -1,11 +1,9 @@
-from pyspark.sql import SparkSession
+from common.spark_session import get_spark
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 from config.paths import *
 
-spark = (SparkSession.builder
-         .appName('Retail_ETL')
-         .getOrCreate())
+spark = get_spark('Retail_ETL')
 
 customer_schema = StructType([
     StructField('customer_id', StringType()),
